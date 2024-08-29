@@ -65,43 +65,6 @@ export const getApi = async ({
   });
 };
 
-export const downloadApi = async ({
-  url,
-  headers,
-  auth = true,
-  params = {},
-}: getApiProps): Promise<AxiosResponse> => {
-  return new Promise((res, rej) => {
-    let headers_custom: Record<string, string> = {};
-
-    if (auth) {
-      const user = Cookies.get("token");
-      if (user !== undefined) {
-        const user_data = JSON.parse(user);
-
-        headers_custom = {
-          ...headers,
-          Authorization: "Bearer " + user_data?.token,
-        };
-      }
-    }
-
-    axios({
-      url: url,
-      method: "GET",
-      headers: headers_custom,
-      params: params,
-      responseType: "blob",
-    })
-      .then((result) => {
-        res(result);
-      })
-      .catch((err) => {
-        rej(err);
-      });
-  });
-};
-
 export const postApi = async ({
   url,
   headers,

@@ -45,10 +45,6 @@ export interface UseGetResult<T> {
   goFirst: () => void;
   searchData: DebouncedFunc<(searchTerm: string) => Promise<void>>;
   memorize_combobox: Array<IComboBox>;
-  downloadFile: (
-    fileParams?: Record<string, string | number>,
-    filename?: string,
-  ) => Promise<void>;
 }
 
 export interface UseGetOptions {
@@ -224,77 +220,6 @@ export default function useGet<T>(
     }
   };
 
-  const downloadFile = async (
-    fileParams?: Record<string, string | number>,
-    filename?: string,
-  ) => {
-    setLoading(true);
-    setError(false);
-
-    try {
-      const urlParams = new URLSearchParams(
-        fileParams as Record<string, string>,
-      ).toString();
-      const urlWithParams = `${URL_BACKEND + url}?${urlParams}`;
-      let headers_custom = {};
-      if (auth) {
-        const user = Cookies.get("tendasaudara_user");
-        if (user !== undefined) {
-          const user_data = JSON.parse(user);
-
-          headers_custom = {
-            Authorization: "Bearer " + user_data?.token,
-          };
-        }
-      }
-
-      const response = await fetch(urlWithParams, {
-        method: "GET",
-        headers: {
-          ...headers_custom,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("File download failed");
-      }
-
-      const contentDisposition = response.headers.get("content-disposition");
-      let suggestedFileName = "downloaded-file";
-      if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
-        if (fileNameMatch?.[1]) {
-          suggestedFileName = fileNameMatch[1];
-        }
-      }
-
-      const downloadFileName = filename || suggestedFileName;
-
-      const blob = await response.blob();
-
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.setAttribute("download", downloadFileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (err: unknown) {
-      let errorMessage = "An unexpected error occurred.";
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      toast.error("File download error", {
-        description: `Message: ${errorMessage}`,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const nextPage = async () => {
     try {
       if (page >= total_page + 1) {
@@ -425,7 +350,6 @@ export default function useGet<T>(
     goLast,
     goFirst,
     searchData,
-    memorize_combobox,
-    downloadFile,
+    memorize_combobox
   };
 }
